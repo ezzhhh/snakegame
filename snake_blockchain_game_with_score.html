@@ -1,0 +1,152 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Themed Snake Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            background-color: #282c34;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        h1 {
+            margin-top: 20px;
+            font-size: 24px;
+        }
+        canvas {
+            background: url('https://github.com/ezzhhh/snake/blob/main/translucent-image.png?raw=true') no-repeat center center;
+            background-size: cover;
+            border: 2px solid #0099ff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Score: <span id="score">0</span></h1>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreDisplay = document.getElementById("score");
+
+        const box = 20;
+        let snake = [];
+        snake[0] = { x: 9 * box, y: 9 * box };
+
+        let direction;
+        let food = {
+            x: Math.floor(Math.random() * 19) * box,
+            y: Math.floor(Math.random() * 19) * box,
+        };
+
+        const foodImg = new Image();
+        foodImg.src = "toncoin-ton-logo-removebg-preview (1).png";
+
+        document.addEventListener("keydown", changeDirection);
+
+        function changeDirection(event) {
+            if (event.key === "ArrowLeft" && direction !== "RIGHT") {
+                direction = "LEFT";
+            } else if (event.key === "ArrowUp" && direction !== "DOWN") {
+                direction = "UP";
+            } else if (event.key === "ArrowRight" && direction !== "LEFT") {
+                direction = "RIGHT";
+            } else if (event.key === "ArrowDown" && direction !== "UP") {
+                direction = "DOWN";
+            }
+        }
+
+        function collision(newHead, snake) {
+            for (let i = 0; i < snake.length; i++) {
+                if (newHead.x === snake[i].x && newHead.y === snake[i].y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        let score = 0;
+        let speed = 200; // Initial speed
+        let game;
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the snake with brighter turquoise color
+            for (let i = 0; i < snake.length; i++) {
+                ctx.fillStyle = "#00e5ff"; // Bright turquoise color
+                ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                ctx.strokeStyle = "#004080";
+                ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+            }
+
+            // Draw the food
+            ctx.drawImage(foodImg, food.x, food.y, box, box);
+
+            // Old head position
+            let snakeX = snake[0].x;
+            let snakeY = snake[0].y;
+
+            // Move snake in the direction
+            if (direction === "LEFT") snakeX -= box;
+            if (direction === "UP") snakeY -= box;
+            if (direction === "RIGHT") snakeX += box;
+            if (direction === "DOWN") snakeY += box;
+
+            // Wrap snake position if it goes out of bounds
+            if (snakeX < 0) snakeX = canvas.width - box;
+            if (snakeY < 0) snakeY = canvas.height - box;
+            if (snakeX >= canvas.width) snakeX = 0;
+            if (snakeY >= canvas.height) snakeY = 0;
+
+            // If snake eats the food
+            if (snakeX === food.x && snakeY === food.y) {
+                food = {
+                    x: Math.floor(Math.random() * 19) * box,
+                    y: Math.floor(Math.random() * 19) * box,
+                };
+
+                // Update score
+                score += 3; // +3 points for each food
+                if (score % 15 === 0) { // every 5th item (15 points step) gives additional +5 points
+                    score += 5;
+                }
+                scoreDisplay.textContent = score;
+
+                // Increase speed after every 3 food items eaten
+                if ((score / 3) % 3 === 0) { // equivalent to every 9 points (3 items)
+                    clearInterval(game);
+                    speed = Math.max(50, speed - 20); // Reduce interval time (increase speed) with a minimum limit
+                    game = setInterval(draw, speed);
+                }
+            } else {
+                snake.pop();
+            }
+
+            // Add new Head
+            const newHead = { x: snakeX, y: snakeY };
+
+            // Game over
+            if (collision(newHead, snake)) {
+                clearInterval(game);
+                alert("Game Over! Final Score: " + score);
+                return;
+            }
+
+            snake.unshift(newHead);
+        }
+
+        game = setInterval(draw, speed);
+    </script>
+</body>
+</html>
